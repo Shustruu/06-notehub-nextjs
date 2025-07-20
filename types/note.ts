@@ -2,14 +2,13 @@ export interface Note {
   id: number;
   title: string;
   content: string;
+  tag: string;
   createdAt: string;
-  tag: 'Todo' | 'Work' | 'Personal' | 'Meeting' | 'Shopping';
+  updatedAt: string;
 }
 
-export interface NewNoteData {
+export interface NoteFormData {
   title: string;
-  content?: string;
-  tag: 'Todo' | 'Work' | 'Personal' | 'Meeting' | 'Shopping';
+  content: string;
+  tag: "Todo" | "Work" | "Personal" | "Meeting" | "Shopping";
 }
-
-
