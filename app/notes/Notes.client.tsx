@@ -1,36 +1,37 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-import { fetchNotes } from "@/lib/api";
-import { useState } from "react";
-import { useDebounce } from "use-debounce";
-import SearchBox from "@/components/SearchBox/SearchBox";
-import NoteList from "@/components/NoteList/NoteList";
-import Pagination from "@/components/Pagination/Pagination";
-import NoteModal from "@/components/NoteModal/NoteModal";
+import { useState } from 'react';
+import { useDebounce } from 'use-debounce';
+import { useQuery } from '@tanstack/react-query';
+import { Toaster } from 'react-hot-toast';
 
-import css from "./NotesPage.module.css";
-import { Note } from "@/types/note";
+import SearchBox from '@/components/SearchBox/SearchBox';
+import NoteList from '@/components/NoteList/NoteList';
+import Loader from '@/components/Loader/Loader';
+import ErrorMessage from '@/components/ErrorMessage/ErrorMessage';
+import NoteModal from '@/components/NoteModal/NoteModal';
+import Pagination from '@/components/Pagination/Pagination';
+import { fetchNotes } from '@/lib/api';
+import type { Note } from '@/types/note';
 
-type NotesClientProps = {
+interface Props {
   initialData: {
     notes: Note[];
     totalPages: number;
   };
-};
+}
 
-export default function NotesClient({ initialData }: NotesClientProps) {
-  const [search, setSearch] = useState("");
+export default function NotesClient({ initialData }: Props) {
+  const [search, setSearch] = useState('');
+  const [debouncedSearch] = useDebounce(search, 1000);
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [debouncedSearch] = useDebounce(search, 500);
 
-  const { data, isPending, error } = useQuery({
-    queryKey: ["notes", debouncedSearch, page],
-    queryFn: () => fetchNotes({ search: debouncedSearch, page }),
-    initialData: initialData,
-
-    placeholderData: (prev) => prev,
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ['notes', debouncedSearch, page],
+    queryFn: () => fetchNotes(debouncedSearch, page),
+    placeholderData: (prev) => prev ?? initialData,  // <- по вимогам ментора
+    staleTime: 1000 * 60 * 5,
   });
 
   const handleSearch = (value: string) => {
@@ -38,35 +39,34 @@ export default function NotesClient({ initialData }: NotesClientProps) {
     setPage(1);
   };
 
-  const handlePageChange = ({ selected }: { selected: number }) => {
-    setPage(selected + 1);
-  };
-
-  const handleOpenModal = () => setIsModalOpen(true);
-  const handleCloseModal = () => setIsModalOpen(false);
-
-  if (isPending) return <p>Loading, please wait...</p>;
-  if (error) return <p>Could not fetch the list of notes. {error.message}</p>;
-  if (!data || data.notes.length === 0) return <p>No notes found.</p>;
-
   return (
-    <div className={css.app}>
-      <header className={css.toolbar}>
-        <SearchBox value={search} onSearch={handleSearch} />
-        {data.totalPages > 1 && (
-          <Pagination
-            totalPages={data.totalPages}
-            currentPage={page}
-            onPageChange={handlePageChange}
-          />
-        )}
-        <button className={css.button} onClick={handleOpenModal}>
-          Add Note
-        </button>
+    <div>
+      <Toaster />
+      <header>
+        <SearchBox value={search} onChange={handleSearch} />
+        <button onClick={() => setIsModalOpen(true)}>Create note +</button>
       </header>
-      {data.notes.length > 0 && <NoteList notes={data.notes} />}
 
-      {isModalOpen && <NoteModal onClose={handleCloseModal} />}
+      {isLoading && <Loader />}
+      {isError && error && <ErrorMessage>{error.message}</ErrorMessage>}
+      {data && data.notes.length > 0 ? (
+        <>
+          <NoteList notes={data.notes} />
+          {data.totalPages > 1 && (
+            <Pagination totalPages={data.totalPages} currentPage={page} onPageChange={setPage} />
+          )}
+        </>
+      ) : (
+        <p>No notes found.</p>
+      )}
+
+      {isModalOpen && <NoteModal onClose={() => setIsModalOpen(false)} />}
     </div>
   );
 }
+
+
+
+
+
+

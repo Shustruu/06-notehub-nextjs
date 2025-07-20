@@ -1,14 +1,16 @@
-"use client";
+'use client';
 
 interface ErrorProps {
   error: Error;
   reset: () => void;
 }
 
-export default function Error({ error }: ErrorProps) {
+export default function Error({ error, reset }: ErrorProps) {
   return (
     <div>
-      <p>Could not fetch the list of notes. {error.message}</p>
+      <h2>Something went wrong:</h2>
+      <p>{error.message}</p>
+      <button onClick={reset}>Try again</button>
     </div>
   );
 }

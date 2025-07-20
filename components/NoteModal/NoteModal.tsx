@@ -1,43 +1,41 @@
-import { useEffect } from "react";
-import { createPortal } from "react-dom";
-import css from "./NoteModal.module.css";
-import NoteForm from "../NoteForm/NoteForm";
+import { useEffect } from 'react';
+import ReactDOM from 'react-dom';
+import NoteForm from '../NoteForm/NoteForm';
+import css from './NoteModal.module.css';
 
 interface NoteModalProps {
   onClose: () => void;
 }
 
 export default function NoteModal({ onClose }: NoteModalProps) {
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
+  useEffect(() => {
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, []);
 
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
     };
-
-    document.addEventListener("keydown", handleEscape);
-    document.body.style.overflow = "hidden";
-
+    window.addEventListener('keydown', handleEsc);
     return () => {
-      document.removeEventListener("keydown", handleEscape);
-      document.body.style.overflow = "";
+      window.removeEventListener('keydown', handleEsc);
     };
   }, [onClose]);
 
-  return createPortal(
-    <div
-      className={css.backdrop}
-      role="dialog"
-      aria-modal="true"
-      onClick={handleBackdropClick}
-    >
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
+  return ReactDOM.createPortal(
+    <div className={css.backdrop} onClick={handleBackdropClick}>
       <div className={css.modal}>
+        <button className={css.close} onClick={onClose} aria-label="Close modal">
+          ×
+        </button>
         <NoteForm onClose={onClose} />
       </div>
     </div>,

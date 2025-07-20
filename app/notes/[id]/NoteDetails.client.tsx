@@ -1,39 +1,34 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-import { fetchNoteById } from "@/lib/api";
-import css from "@/components/NoteDetails/NoteDetails.module.css";
+import { useParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { getSingleNote } from '@/lib/api';
 
-type Props = {
-  id: number;
-};
+export default function NoteDetailsClient() {
+  const { id } = useParams<{ id: string }>();
+  const noteId = Number(id);
 
-export default function NoteDetailsClient({ id }: Props) {
-  const {
-    data: note,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["note", id],
-    queryFn: () => fetchNoteById(id),
+  const { data: note, isLoading, error } = useQuery({
+    queryKey: ['note', noteId],
+    queryFn: () => getSingleNote(noteId),
     refetchOnMount: false,
   });
 
-  if (isLoading) return <p>Loading, please wait...</p>;
-  if (error || !note) return <p>Something went wrong.</p>;
+  if (isLoading) return <p>Loading...</p>;
+  if (error || !note) return <p>Some error...</p>;
 
   return (
-    <div className={css.container}>
-      <div className={css.item}>
-        <div className={css.header}>
-          <h2>{note.title}</h2>
-          <button className={css.editBtn}>Edit note</button>
-        </div>
-        <p className={css.content}>{note.content}</p>
-        <p className={css.date}>
-          {new Date(note.createdAt).toLocaleDateString()}
-        </p>
-      </div>
+    <div>
+      <h2>{note.title}</h2>
+      <p>{note.content}</p>
+      <p>Tag: {note.tag}</p>
+      <p>Created at: {note.createdAt}</p>
     </div>
   );
 }
+
+
+
+
+
+
